@@ -82,21 +82,87 @@ export const processVoiceInput = async (
   return "What is machine learning and how does it work?";
 };
 
-// Simulate text-to-speech conversion
+// Improved text-to-speech conversion
 export const synthesizeSpeech = async (
-  text: string
-): Promise<void> => {
-  // In a real implementation, this might use a more sophisticated TTS API
+  text: string,
+  voiceIndex = 0 // default voice index
+): Promise<boolean> => {
   console.log('Synthesizing speech:', text);
   
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    window.speechSynthesis.speak(utterance);
-    return Promise.resolve();
-  } else {
-    console.error('Speech synthesis not supported');
-    return Promise.reject('Speech synthesis not supported');
-  }
+  return new Promise((resolve, reject) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Get available voices
+      let voices = window.speechSynthesis.getVoices();
+      
+      // If voices aren't loaded yet, wait for them
+      if (voices.length === 0) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          voices = window.speechSynthesis.getVoices();
+          if (voices.length > 0) {
+            // Select a voice (preferring English voices)
+            const englishVoices = voices.filter(voice => 
+              voice.lang.includes('en-')
+            );
+            
+            if (englishVoices.length > 0) {
+              utterance.voice = englishVoices[voiceIndex % englishVoices.length];
+            } else {
+              utterance.voice = voices[voiceIndex % voices.length];
+            }
+            
+            // Set other properties
+            utterance.rate = 1.0; // Speed
+            utterance.pitch = 1.0; // Pitch
+            utterance.volume = 1.0; // Volume
+            
+            // Handle events
+            utterance.onend = () => resolve(true);
+            utterance.onerror = (event) => {
+              console.error('Speech synthesis error:', event);
+              reject('Speech synthesis failed');
+            };
+            
+            window.speechSynthesis.speak(utterance);
+          } else {
+            reject('No voices available for speech synthesis');
+          }
+        };
+      } else {
+        // Voices are already loaded, proceed directly
+        const englishVoices = voices.filter(voice => 
+          voice.lang.includes('en-')
+        );
+        
+        if (englishVoices.length > 0) {
+          utterance.voice = englishVoices[voiceIndex % englishVoices.length];
+        } else {
+          utterance.voice = voices[voiceIndex % voices.length];
+        }
+        
+        // Set other properties
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
+        
+        // Handle events
+        utterance.onend = () => resolve(true);
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          reject('Speech synthesis failed');
+        };
+        
+        window.speechSynthesis.speak(utterance);
+      }
+    } else {
+      console.error('Speech synthesis not supported');
+      reject('Speech synthesis not supported');
+    }
+  });
 };
 
 // Simulate sign language video generation
@@ -107,6 +173,9 @@ export const generateSignLanguageVideo = async (
   
   // Simulate processing delay
   await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // In a real implementation, this would call a service like SignAll API
+  // or similar to generate an actual sign language video
   
   // Return mock result
   return {
