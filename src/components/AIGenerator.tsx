@@ -55,7 +55,7 @@ const AIGenerator: React.FC<AIGeneratorProps> = ({
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                 Desired Format
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <button
                   type="button"
                   className={cn(
@@ -146,6 +146,38 @@ const AIGenerator: React.FC<AIGeneratorProps> = ({
                       <circle cx="12" cy="12" r="10"/>
                     </svg>
                     <span className="font-medium">Audio</span>
+                  </div>
+                </button>
+                
+                <button
+                  type="button"
+                  className={cn(
+                    "p-4 rounded-lg border transition-all text-center",
+                    format === 'signLanguage' 
+                      ? "border-primary/50 bg-primary/5 text-primary" 
+                      : "border-gray-200 dark:border-gray-700 hover:border-primary/30 hover:bg-primary/5"
+                  )}
+                  onClick={() => setFormat('signLanguage')}
+                >
+                  <div className="flex flex-col items-center">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="mb-2"
+                    >
+                      <path d="M7 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7l-3-3z"/>
+                      <path d="M18 10V4a1 1 0 0 0-1-1h-3a1 1 0 0 0-1 1v6l-3-3"/>
+                      <rect x="5" y="14" width="5" height="6" rx="1"/>
+                      <rect x="13" y="14" width="5" height="6" rx="1"/>
+                    </svg>
+                    <span className="font-medium">Sign Language</span>
                   </div>
                 </button>
               </div>

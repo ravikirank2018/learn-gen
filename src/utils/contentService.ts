@@ -27,6 +27,15 @@ const mockExternalContent: ContentItem[] = [
     source: 'external',
     format: 'audio',
     url: 'https://example.com/audio/ancient-rome.mp3',
+  },
+  {
+    id: 'e4',
+    title: 'Sign Language Basics',
+    description: 'Learn the fundamentals of sign language communication.',
+    source: 'external',
+    format: 'signLanguage',
+    url: 'https://example.com/videos/sign-language-basics.mp4',
+    thumbnailUrl: 'https://example.com/thumbnails/sign-language.jpg',
   }
 ];
 
@@ -47,8 +56,64 @@ const mockAIContent: ContentItem[] = [
     format: 'video',
     url: 'https://example.com/ai-videos/quantum-computing.mp4',
     thumbnailUrl: 'https://example.com/thumbnails/quantum-computing.jpg',
+  },
+  {
+    id: 'a3',
+    title: 'Sign Language Tutorial',
+    description: 'AI-generated sign language video tutorial.',
+    source: 'ai',
+    format: 'signLanguage',
+    url: 'https://example.com/ai-videos/sign-language-tutorial.mp4',
+    thumbnailUrl: 'https://example.com/thumbnails/ai-sign-language.jpg',
   }
 ];
+
+// Simulate speech-to-text processing
+export const processVoiceInput = async (
+  audioBlob: Blob
+): Promise<string> => {
+  // In a real implementation, this would send the audio to a speech-to-text API
+  console.log('Processing voice input...');
+  
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Return mock result
+  return "What is machine learning and how does it work?";
+};
+
+// Simulate text-to-speech conversion
+export const synthesizeSpeech = async (
+  text: string
+): Promise<void> => {
+  // In a real implementation, this might use a more sophisticated TTS API
+  console.log('Synthesizing speech:', text);
+  
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+    return Promise.resolve();
+  } else {
+    console.error('Speech synthesis not supported');
+    return Promise.reject('Speech synthesis not supported');
+  }
+};
+
+// Simulate sign language video generation
+export const generateSignLanguageVideo = async (
+  content: string
+): Promise<{ url: string; thumbnailUrl: string }> => {
+  console.log('Generating sign language video for:', content);
+  
+  // Simulate processing delay
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // Return mock result
+  return {
+    url: 'https://example.com/ai-videos/generated-sign-language.mp4',
+    thumbnailUrl: 'https://example.com/thumbnails/generated-sign-language.jpg'
+  };
+};
 
 // Simulate content retrieval with a delay
 export const searchContent = async (
@@ -65,6 +130,12 @@ export const searchContent = async (
   const foundExternal = Math.random() < 0.75;
   
   if (foundExternal) {
+    // If sign language format is requested, prioritize sign language content
+    if (format === 'signLanguage') {
+      const signLanguageContent = mockExternalContent.find(item => item.format === 'signLanguage');
+      if (signLanguageContent) return signLanguageContent;
+    }
+    
     // Return a random mock external content
     return mockExternalContent[Math.floor(Math.random() * mockExternalContent.length)];
   }
@@ -81,6 +152,17 @@ export const generateContent = async (
   
   // Simulate AI generation delay
   await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  // For sign language format, return sign language AI content
+  if (format === 'signLanguage') {
+    const signLanguageContent = mockAIContent.find(item => item.format === 'signLanguage');
+    if (signLanguageContent) {
+      const content = { ...signLanguageContent };
+      content.title = `${prompt} (AI Generated)`;
+      content.description = `AI-generated sign language content about ${prompt}`;
+      return content;
+    }
+  }
   
   // Return a random mock AI content
   const content = { ...mockAIContent[Math.floor(Math.random() * mockAIContent.length)] };

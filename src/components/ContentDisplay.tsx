@@ -8,7 +8,7 @@ export type ContentItem = {
   title: string;
   description: string;
   source: 'external' | 'ai';
-  format: 'text' | 'video' | 'audio';
+  format: 'text' | 'video' | 'audio' | 'signLanguage';
   url?: string;
   content?: string;
   thumbnailUrl?: string;
@@ -42,6 +42,14 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
       default: return 'text-base';
     }
   }, [accessibilityOptions.textSize]);
+
+  // Function to read text content aloud
+  const readContent = () => {
+    if (content?.content && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(content.content);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -84,6 +92,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
           <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
           <button 
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            onClick={() => readContent()}
           >
             Try Again
           </button>
@@ -198,21 +207,57 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
                 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" 
                 : content.format === 'video'
                 ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                : content.format === 'audio'
+                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                : "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
             )}>
-              {content.format === 'text' ? 'Text' : content.format === 'video' ? 'Video' : 'Audio'}
+              {content.format === 'text' 
+                ? 'Text' 
+                : content.format === 'video' 
+                ? 'Video' 
+                : content.format === 'audio' 
+                ? 'Audio'
+                : 'Sign Language'
+              }
             </span>
           </div>
         </div>
 
-        <h2 className={cn(
-          "text-2xl font-bold mb-4",
-          accessibilityOptions.textSize === 'large' && "text-3xl",
-          accessibilityOptions.textSize === 'x-large' && "text-4xl",
-          accessibilityOptions.highContrast && "text-black dark:text-white"
-        )}>
-          {content.title}
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={cn(
+            "text-2xl font-bold",
+            accessibilityOptions.textSize === 'large' && "text-3xl",
+            accessibilityOptions.textSize === 'x-large' && "text-4xl",
+            accessibilityOptions.highContrast && "text-black dark:text-white"
+          )}>
+            {content.title}
+          </h2>
+          
+          {content.format === 'text' && content.content && (
+            <button 
+              onClick={readContent}
+              className="p-2 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors"
+              aria-label="Read content aloud"
+              title="Read content aloud"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12 6v12"/>
+                <path d="M6 12h12"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </button>
+          )}
+        </div>
         
         <p className={cn(
           "text-gray-600 dark:text-gray-300 mb-6",
@@ -248,6 +293,19 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
               <source src={content.url} />
               Your browser does not support the audio element.
             </audio>
+          </div>
+        )}
+        
+        {content.format === 'signLanguage' && content.url && (
+          <div className="mb-6 rounded-lg overflow-hidden shadow-lg">
+            <div className="relative aspect-video bg-black">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-white text-center p-4">
+                  This is where the sign language video would play.
+                  <br />In a production environment, this would be an actual video of sign language.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
