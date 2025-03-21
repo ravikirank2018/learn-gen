@@ -34,7 +34,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
     highContrast: false,
     subtitles: true,
     signLanguage: false,
-    textSize: 'normal',
+    textSize: 'normal' as 'normal' | 'large' | 'x-large', // Add explicit type assertion here
   });
 
   const textSizeClass = React.useMemo(() => {
@@ -45,7 +45,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
     }
   }, [accessibilityOptions.textSize]);
 
-  // Function to read text content aloud
   const readContent = async () => {
     if (content?.content) {
       if (speakText) {
@@ -60,14 +59,12 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
     }
   };
 
-  // Automatically read content when it changes if textToSpeech is enabled
   useEffect(() => {
     if (content?.content && accessibilityOptions.textToSpeech) {
       readContent();
     }
   }, [content, accessibilityOptions.textToSpeech]);
 
-  // Also read error messages aloud
   useEffect(() => {
     if (error && accessibilityOptions.textToSpeech) {
       if (speakText) {
@@ -388,4 +385,3 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
 };
 
 export default ContentDisplay;
-
