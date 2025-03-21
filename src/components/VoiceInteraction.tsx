@@ -8,13 +8,15 @@ type VoiceInteractionProps = {
   isListening: boolean;
   setIsListening: (isListening: boolean) => void;
   className?: string;
+  disabled?: boolean;
 };
 
 const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
   onSubmit,
   isListening,
   setIsListening,
-  className
+  className,
+  disabled = false
 }) => {
   const [transcript, setTranscript] = useState('');
   const [autoRestart, setAutoRestart] = useState(true);
@@ -131,7 +133,7 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
 
   // Start/stop recognition based on isListening state
   useEffect(() => {
-    if (isListening && recognition.current) {
+    if (isListening && recognition.current && !disabled) {
       try {
         recognition.current.start();
         toast.info('Listening... Speak now!', {
@@ -140,16 +142,27 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
       } catch (e) {
         console.log('Recognition already started or error', e);
       }
-    } else if (!isListening && recognition.current) {
+    } else if ((!isListening || disabled) && recognition.current) {
       try {
         recognition.current.stop();
       } catch (e) {
         console.log('Recognition already stopped or error', e);
       }
     }
-  }, [isListening]);
+  }, [isListening, disabled]);
+
+  // If disabled prop changes to true while listening, stop listening
+  useEffect(() => {
+    if (disabled && isListening) {
+      setIsListening(false);
+    }
+  }, [disabled, isListening]);
 
   const toggleListening = () => {
+    if (disabled) {
+      toast.info("Please wait until the current speech finishes");
+      return;
+    }
     setIsListening(!isListening);
   };
 
@@ -195,9 +208,11 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         <div className="text-center mb-6">
           <h3 className="text-xl font-semibold mb-2">Voice Interaction</h3>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            {isListening 
-              ? 'Listening... Speak now!' 
-              : 'Click the microphone to start speaking'}
+            {disabled 
+              ? 'Please wait while the system is speaking...' 
+              : isListening 
+                ? 'Listening... Speak now!' 
+                : 'Click the microphone to start speaking'}
           </p>
         </div>
         
@@ -205,10 +220,13 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
           {isSpeechRecognitionSupported() ? (
             <button
               onClick={toggleListening}
+              disabled={disabled}
               className={`w-16 h-16 rounded-full flex items-center justify-center transition-all ${
-                isListening 
-                  ? 'bg-red-500 text-white animate-pulse' 
-                  : 'bg-primary text-white hover:bg-primary/90'
+                disabled 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : isListening 
+                    ? 'bg-red-500 text-white animate-pulse' 
+                    : 'bg-primary text-white hover:bg-primary/90'
               }`}
               aria-label={isListening ? 'Stop listening' : 'Start listening'}
             >
@@ -275,7 +293,7 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         <div className="flex justify-center">
           <Button
             onClick={handleSubmit}
-            disabled={!transcript.trim() || !isSpeechRecognitionSupported()}
+            disabled={!transcript.trim() || !isSpeechRecognitionSupported() || disabled}
             className="px-6 py-2 bg-primary text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Submit Voice Query

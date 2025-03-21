@@ -1,7 +1,7 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import AccessibilityControls from './AccessibilityControls';
+import { synthesizeSpeech } from '@/utils/contentService';
 
 export type ContentItem = {
   id: string;
@@ -19,16 +19,18 @@ type ContentDisplayProps = {
   isLoading: boolean;
   error: string | null;
   className?: string;
+  speakText?: (text: string) => Promise<void>;
 };
 
 const ContentDisplay: React.FC<ContentDisplayProps> = ({ 
   content, 
   isLoading, 
   error,
-  className 
+  className,
+  speakText 
 }) => {
   const [accessibilityOptions, setAccessibilityOptions] = React.useState({
-    textToSpeech: false,
+    textToSpeech: true, // Enable by default for blind users
     highContrast: false,
     subtitles: true,
     signLanguage: false,
@@ -44,12 +46,39 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
   }, [accessibilityOptions.textSize]);
 
   // Function to read text content aloud
-  const readContent = () => {
-    if (content?.content && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(content.content);
-      window.speechSynthesis.speak(utterance);
+  const readContent = async () => {
+    if (content?.content) {
+      if (speakText) {
+        await speakText(content.content);
+      } else {
+        try {
+          await synthesizeSpeech(content.content);
+        } catch (err) {
+          console.error('Error reading content:', err);
+        }
+      }
     }
   };
+
+  // Automatically read content when it changes if textToSpeech is enabled
+  useEffect(() => {
+    if (content?.content && accessibilityOptions.textToSpeech) {
+      readContent();
+    }
+  }, [content, accessibilityOptions.textToSpeech]);
+
+  // Also read error messages aloud
+  useEffect(() => {
+    if (error && accessibilityOptions.textToSpeech) {
+      if (speakText) {
+        speakText(error);
+      } else {
+        synthesizeSpeech(error).catch(err => 
+          console.error('Error speaking error message:', err)
+        );
+      }
+    }
+  }, [error, accessibilityOptions.textToSpeech]);
 
   if (isLoading) {
     return (
@@ -140,7 +169,10 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
   return (
     <div className={cn("relative", className)}>
       <div className="absolute top-4 right-4 z-10">
-        <AccessibilityControls onChange={setAccessibilityOptions} />
+        <AccessibilityControls 
+          onChange={setAccessibilityOptions} 
+          initialOptions={accessibilityOptions}
+        />
       </div>
 
       <div 
@@ -356,3 +388,4 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
 };
 
 export default ContentDisplay;
+

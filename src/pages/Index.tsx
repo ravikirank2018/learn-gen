@@ -18,8 +18,10 @@ const Index = () => {
     isListening,
     setIsListening,
     isGeneratingSignLanguage,
+    isSpeaking,
     handleSearch, 
-    handleGenerate 
+    handleGenerate,
+    speakText
   } = useContentSearch();
 
   return (
@@ -39,6 +41,7 @@ const Index = () => {
                 onSubmit={handleSearch}
                 isListening={isListening}
                 setIsListening={setIsListening}
+                disabled={isSpeaking}
               />
             </div>
           </div>
@@ -56,7 +59,8 @@ const Index = () => {
         <ContentDisplay 
           content={content} 
           isLoading={isSearching || isGenerating} 
-          error={error} 
+          error={error}
+          speakText={speakText}
         />
       </div>
       
