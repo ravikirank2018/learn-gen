@@ -44,7 +44,7 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         setTranscript(finalTranscript || interimTranscript);
       };
 
-      recognition.current.onerror = (event: SpeechRecognitionError) => {
+      recognition.current.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Speech recognition error', event.error);
         toast.error('Speech recognition error: ' + event.error);
         setIsListening(false);
