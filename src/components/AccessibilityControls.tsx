@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -12,18 +11,25 @@ type AccessibilityOptions = {
 
 type AccessibilityControlsProps = {
   onChange: (options: AccessibilityOptions) => void;
+  initialOptions?: AccessibilityOptions;
   className?: string;
 };
 
-const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({ onChange, className }) => {
+const AccessibilityControls: React.FC<AccessibilityControlsProps> = ({ 
+  onChange, 
+  initialOptions,
+  className 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [options, setOptions] = useState<AccessibilityOptions>({
-    textToSpeech: false,
-    highContrast: false,
-    subtitles: true,
-    signLanguage: false,
-    textSize: 'normal',
-  });
+  const [options, setOptions] = useState<AccessibilityOptions>(
+    initialOptions || {
+      textToSpeech: false,
+      highContrast: false,
+      subtitles: true,
+      signLanguage: false,
+      textSize: 'normal',
+    }
+  );
 
   const handleChange = (key: keyof AccessibilityOptions, value: any) => {
     const newOptions = { ...options, [key]: value };
