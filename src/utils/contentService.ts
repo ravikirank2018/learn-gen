@@ -35,6 +35,14 @@ const mockExternalContent: ContentItem[] = [
     format: 'signLanguage',
     url: 'https://example.com/videos/sign-language-basics.mp4',
     thumbnailUrl: 'https://example.com/thumbnails/sign-language.jpg',
+  },
+  {
+    id: 'e5',
+    title: 'Data Structures Fundamentals',
+    description: 'Learn about arrays, linked lists, stacks, queues, trees, and graphs.',
+    source: 'external',
+    format: 'text',
+    content: 'Data structures are specialized formats for organizing, processing, retrieving and storing data. They provide a way to manage large amounts of data efficiently for uses such as large databases and internet indexing services. Common data structures include arrays, linked lists, stacks, queues, trees, and graphs.',
   }
 ];
 
@@ -278,7 +286,7 @@ export const searchWebForContent = async (
   }
 };
 
-// Simulate content retrieval with a delay
+// Improved search content function that better matches queries
 export const searchContent = async (
   query: string, 
   level: string, 
@@ -289,20 +297,44 @@ export const searchContent = async (
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Randomly decide if we found external content or not (75% chance of finding)
-  const foundExternal = Math.random() < 0.75;
+  // Add keyword matching for data structures
+  const keywords = {
+    'data structure': ['e5'],
+    'machine learning': ['e1'],
+    'quantum': ['e2'],
+    'rome': ['e3'],
+    'sign language': ['e4']
+  };
   
-  if (foundExternal) {
-    // If sign language format is requested, prioritize sign language content
-    if (format === 'signLanguage') {
-      const signLanguageContent = mockExternalContent.find(item => item.format === 'signLanguage');
-      if (signLanguageContent) return signLanguageContent;
+  // Check if the query contains any of our keywords
+  let matchedContent = null;
+  
+  for (const [keyword, ids] of Object.entries(keywords)) {
+    if (query.toLowerCase().includes(keyword.toLowerCase())) {
+      // Find the first matching content item
+      for (const id of ids) {
+        const item = mockExternalContent.find(item => item.id === id);
+        if (item && (format === 'all' || format === item.format)) {
+          matchedContent = item;
+          break;
+        }
+      }
+      if (matchedContent) break;
     }
-    
-    // Return a random mock external content
-    return mockExternalContent[Math.floor(Math.random() * mockExternalContent.length)];
   }
   
+  // If no keyword match found but we're asked for sign language specifically
+  if (!matchedContent && format === 'signLanguage') {
+    const signLanguageContent = mockExternalContent.find(item => item.format === 'signLanguage');
+    if (signLanguageContent) return signLanguageContent;
+  }
+  
+  // If we have a match, return it
+  if (matchedContent) {
+    return matchedContent;
+  }
+  
+  // If no match found, return null to trigger web search
   return null;
 };
 
