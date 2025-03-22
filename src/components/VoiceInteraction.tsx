@@ -22,8 +22,38 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
   const [autoRestart, setAutoRestart] = useState(true);
   const [selectedLevel, setSelectedLevel] = useState('beginner');
   const [selectedFormat, setSelectedFormat] = useState('text');
+  const [isBlindMode, setIsBlindMode] = useState(false);
   const recognition = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<number | null>(null);
+
+  // Check if user might be using a screen reader
+  useEffect(() => {
+    // Try to detect if user might be using a screen reader
+    const possibleScreenReaderUser = 
+      window.navigator.userAgent.includes('JAWS') || 
+      window.navigator.userAgent.includes('NVDA') ||
+      window.navigator.userAgent.includes('VoiceOver') ||
+      document.querySelector('[role="application"][aria-roledescription="screen reader"]') !== null;
+    
+    if (possibleScreenReaderUser) {
+      setIsBlindMode(true);
+      // Auto announce the availability of voice search
+      const message = "Voice search is available. Click the microphone button or press space to start speaking.";
+      window.setTimeout(() => {
+        // Use aria-live region to announce to screen readers
+        const announcer = document.createElement('div');
+        announcer.setAttribute('aria-live', 'assertive');
+        announcer.setAttribute('class', 'sr-only');
+        announcer.textContent = message;
+        document.body.appendChild(announcer);
+        
+        // Remove after announcement
+        setTimeout(() => {
+          document.body.removeChild(announcer);
+        }, 3000);
+      }, 2000);
+    }
+  }, []);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -158,11 +188,58 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
     }
   }, [disabled, isListening]);
 
+  // Add keyboard shortcuts for blind users
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Space key to toggle listening when not in an input field
+      if (e.code === 'Space' && 
+          !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName) &&
+          !(e.target as HTMLElement)?.isContentEditable) {
+        if (isBlindMode && !disabled) {
+          e.preventDefault();
+          toggleListening();
+        }
+      }
+      // Enter key to submit when transcript is available
+      else if (e.code === 'Enter' && 
+               !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName) &&
+               transcript.trim() && 
+               isBlindMode && 
+               !isListening && 
+               !disabled) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [transcript, isListening, disabled, isBlindMode]);
+
   const toggleListening = () => {
     if (disabled) {
       toast.info("Please wait until the current speech finishes");
       return;
     }
+    
+    if (!isListening) {
+      // Let blind users know we're starting to listen
+      if (isBlindMode) {
+        const announcer = document.createElement('div');
+        announcer.setAttribute('aria-live', 'assertive');
+        announcer.setAttribute('class', 'sr-only');
+        announcer.textContent = "Listening. Speak now. Press space to stop listening.";
+        document.body.appendChild(announcer);
+        
+        // Remove after announcement
+        setTimeout(() => {
+          document.body.removeChild(announcer);
+        }, 1500);
+      }
+    }
+    
     setIsListening(!isListening);
   };
 
@@ -189,11 +266,44 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
         detectedFormat = 'signLanguage';
       }
       
+      // For blind users, default to audio format if not specified
+      if (isBlindMode && detectedFormat === 'text') {
+        detectedFormat = 'audio';
+      }
+      
       onSubmit(transcript, detectedLevel, detectedFormat);
       setTranscript('');
-      toast.success('Query submitted!');
+      
+      // Announcement for blind users
+      if (isBlindMode) {
+        const announcer = document.createElement('div');
+        announcer.setAttribute('aria-live', 'assertive');
+        announcer.setAttribute('class', 'sr-only');
+        announcer.textContent = "Search submitted. Processing your request.";
+        document.body.appendChild(announcer);
+        
+        // Remove after announcement
+        setTimeout(() => {
+          document.body.removeChild(announcer);
+        }, 1500);
+      } else {
+        toast.success('Query submitted!');
+      }
     } else {
-      toast.error('Please say something first');
+      if (isBlindMode) {
+        const announcer = document.createElement('div');
+        announcer.setAttribute('aria-live', 'assertive');
+        announcer.setAttribute('class', 'sr-only');
+        announcer.textContent = "Please say something first before submitting.";
+        document.body.appendChild(announcer);
+        
+        // Remove after announcement
+        setTimeout(() => {
+          document.body.removeChild(announcer);
+        }, 1500);
+      } else {
+        toast.error('Please say something first');
+      }
     }
   };
 
@@ -206,8 +316,8 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
     <div className={className}>
       <div className="glass p-6 rounded-xl shadow-lg border border-white/20">
         <div className="text-center mb-6">
-          <h3 className="text-xl font-semibold mb-2">Voice Interaction</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
+          <h3 className="text-xl font-semibold mb-2" id="voice-interaction-title">Voice Interaction</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300" aria-live="polite" id="voice-status">
             {disabled 
               ? 'Please wait while the system is speaking...' 
               : isListening 
@@ -229,6 +339,8 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
                     : 'bg-primary text-white hover:bg-primary/90'
               }`}
               aria-label={isListening ? 'Stop listening' : 'Start listening'}
+              aria-pressed={isListening}
+              aria-describedby="voice-status"
             >
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -247,25 +359,30 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
               </svg>
             </button>
           ) : (
-            <div className="text-center p-4 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-700 dark:text-red-300">
+            <div className="text-center p-4 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-700 dark:text-red-300" role="alert">
               Speech recognition is not supported in your browser.
             </div>
           )}
         </div>
         
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[100px] mb-4">
+        <div 
+          className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[100px] mb-4" 
+          aria-live="polite" 
+          aria-atomic="true"
+        >
           {transcript ? transcript : 'Your spoken words will appear here...'}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" id="difficulty-label">
               Difficulty Level
             </label>
             <select
               className="w-full px-4 py-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               value={selectedLevel}
               onChange={(e) => setSelectedLevel(e.target.value)}
+              aria-labelledby="difficulty-label"
             >
               <option value="beginner">Beginner</option>
               <option value="intermediate">Intermediate</option>
@@ -274,17 +391,18 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" id="format-label">
               Content Format
             </label>
             <select
               className="w-full px-4 py-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               value={selectedFormat}
               onChange={(e) => setSelectedFormat(e.target.value)}
+              aria-labelledby="format-label"
             >
               <option value="text">Text</option>
               <option value="video">Video</option>
-              <option value="audio">Audio</option>
+              <option value="audio">Audio {isBlindMode && '(Recommended)'}</option>
               <option value="signLanguage">Sign Language</option>
             </select>
           </div>
@@ -299,6 +417,12 @@ const VoiceInteraction: React.FC<VoiceInteractionProps> = ({
             Submit Voice Query
           </Button>
         </div>
+        
+        {isBlindMode && (
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+            <p>Keyboard shortcuts: Space to toggle listening, Enter to submit</p>
+          </div>
+        )}
       </div>
     </div>
   );

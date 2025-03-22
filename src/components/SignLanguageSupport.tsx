@@ -11,12 +11,13 @@ const SignLanguageSupport: React.FC<SignLanguageSupportProps> = ({
   isGenerating,
   className 
 }) => {
+  // Display appropriate component based on state
   if (isGenerating) {
     return <SignLanguageLoading className={className} />;
   }
 
   if (!content) {
-    return <SignLanguageEmpty className={className} />;
+    return <SignLanguageEmpty className={className} accessibilityText="No sign language content available. You can use voice interaction to search for content." />;
   }
 
   return <SignLanguageContent content={content} className={className} />;

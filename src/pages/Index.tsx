@@ -26,6 +26,11 @@ const Index = () => {
 
   return (
     <Layout>
+      <div className="sr-only" aria-live="polite">
+        Educational content search application. Use voice controls to search for content.
+        Press space key to start or stop voice recognition.
+      </div>
+      
       <Hero />
       
       <div className="container max-w-6xl mx-auto px-4 py-8">

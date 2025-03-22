@@ -6,7 +6,8 @@ import {
   searchContent, 
   generateContent, 
   synthesizeSpeech, 
-  generateSignLanguageVideo 
+  generateSignLanguageVideo,
+  searchWebForContent
 } from '@/utils/contentService';
 
 const useContentSearch = () => {
@@ -46,7 +47,14 @@ const useContentSearch = () => {
     await speakText("Searching for content about " + query);
     
     try {
-      const result = await searchContent(query, level, format);
+      // First try to search our internal database
+      let result = await searchContent(query, level, format);
+      
+      // If no result, search the web
+      if (!result) {
+        await speakText("No content found in our database. Searching the web...");
+        result = await searchWebForContent(query, level, format);
+      }
       
       if (result) {
         setContent(result);

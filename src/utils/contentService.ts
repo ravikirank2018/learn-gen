@@ -222,6 +222,62 @@ export const generateSignLanguageVideo = async (
   };
 };
 
+// New function to search web for content
+export const searchWebForContent = async (
+  query: string,
+  level: string,
+  format: string
+): Promise<ContentItem | null> => {
+  console.log(`Searching web for: ${query}, Level: ${level}, Format: ${format}`);
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 3000));
+  
+  try {
+    // In a real implementation, this would call a web search API like Google Custom Search,
+    // Bing Search API, or a similar service. For this mock implementation, we'll simulate
+    // a successful search with fabricated content.
+
+    // Create a mock result based on the query
+    const titleWords = query.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+    
+    const result: ContentItem = {
+      id: `web-${Date.now()}`,
+      title: titleWords,
+      description: `Web search results for "${query}" at ${level} level`,
+      source: 'external',
+      format: format as 'text' | 'video' | 'audio' | 'signLanguage',
+    };
+    
+    // Generate different content based on format
+    switch(format) {
+      case 'text':
+        result.content = `Here is information about ${query} at ${level} level. This content would normally be retrieved from the web through a search API. For ${level} learners, ${query} can be explained as follows: [Detailed explanation would appear here based on actual web search results].`;
+        break;
+      case 'video':
+        result.url = 'https://www.youtube.com/embed/JhHMJCUmq28'; // Example video
+        result.thumbnailUrl = 'https://img.youtube.com/vi/JhHMJCUmq28/maxresdefault.jpg';
+        break;
+      case 'audio':
+        // In a real implementation, this could be a text-to-speech conversion of web content
+        result.url = 'https://example.com/audio/generated-audio.mp3'; // This would be a real URL in production
+        result.content = `Audio explanation about ${query} at ${level} level. In a real implementation, this would be actual content converted to speech.`;
+        break;
+      case 'signLanguage':
+        result.url = 'https://example.com/videos/sign-language-explanation.mp4'; // This would be a real URL in production
+        result.thumbnailUrl = 'https://example.com/thumbnails/sign-language.jpg';
+        break;
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error searching web for content:', error);
+    return null;
+  }
+};
+
 // Simulate content retrieval with a delay
 export const searchContent = async (
   query: string, 
