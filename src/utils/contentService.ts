@@ -63,15 +63,6 @@ const mockAIContent: ContentItem[] = [
     format: 'video',
     url: 'https://example.com/ai-videos/quantum-computing.mp4',
     thumbnailUrl: 'https://example.com/thumbnails/quantum-computing.jpg',
-  },
-  {
-    id: 'a3',
-    title: 'Sign Language Tutorial',
-    description: 'AI-generated sign language video tutorial.',
-    source: 'ai',
-    format: 'signLanguage',
-    url: 'https://example.com/ai-videos/sign-language-tutorial.mp4',
-    thumbnailUrl: 'https://example.com/thumbnails/ai-sign-language.jpg',
   }
 ];
 
@@ -89,7 +80,7 @@ export const processVoiceInput = async (
   return "What is machine learning and how does it work?";
 };
 
-// Improved text-to-speech conversion with better reliability
+// Text-to-speech conversion
 export const synthesizeSpeech = async (
   text: string,
   voiceIndex = 0 // default voice index
@@ -223,45 +214,61 @@ export const searchWebForContent = async (
   await new Promise(resolve => setTimeout(resolve, 3000));
   
   try {
-    // In a real implementation, this would call a web search API like Google Custom Search,
-    // Bing Search API, or a similar service. For this mock implementation, we'll simulate
-    // a successful search with fabricated content.
-
-    // Extract main topic from query by removing filler words
-    const cleanQuery = query.replace(/^(tell me|say) about (a|an|the)?/i, '').trim();
-    const topic = cleanQuery || query;
+    // Clean the query to handle typos and normalize input
+    let normalizedQuery = query.toLowerCase().trim();
+    
+    // Handle common typos in "data structures"
+    if (normalizedQuery.includes("data str") || 
+        normalizedQuery.includes("data strc") || 
+        normalizedQuery.includes("data struct")) {
+      normalizedQuery = "data structures";
+    }
     
     // Format the title properly
-    const titleWords = topic.split(' ').map(word => 
+    const titleWords = normalizedQuery.split(' ').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
     
+    // Create base content item
     const result: ContentItem = {
       id: `web-${Date.now()}`,
       title: titleWords,
-      description: `Web search results for "${topic}" at ${level} level`,
+      description: `Web search results for "${normalizedQuery}" at ${level} level`,
       source: 'external',
-      format: format as 'text' | 'video' | 'audio' | 'signLanguage',
+      format: format as 'text' | 'video' | 'audio',
     };
     
-    // Generate different content based on format and topic
-    switch(format) {
-      case 'text':
-        result.content = generateTextContent(topic, level);
-        break;
-      case 'video':
-        result.url = 'https://www.youtube.com/embed/JhHMJCUmq28'; // Example video
+    // Match content based on query topic
+    if (normalizedQuery.includes("data structure")) {
+      if (format === 'video') {
+        result.url = 'https://www.youtube.com/embed/RBSGKlAvoiM'; // Data structures video
+        result.thumbnailUrl = 'https://img.youtube.com/vi/RBSGKlAvoiM/maxresdefault.jpg';
+      } else if (format === 'text') {
+        result.content = generateTextContent("data structures", level);
+      }
+    } else if (normalizedQuery.includes("machine learning")) {
+      if (format === 'video') {
+        result.url = 'https://www.youtube.com/embed/ukzFI9rgwfU'; // Machine learning video
+        result.thumbnailUrl = 'https://img.youtube.com/vi/ukzFI9rgwfU/maxresdefault.jpg';
+      } else if (format === 'text') {
+        result.content = generateTextContent("machine learning", level);
+      }
+    } else if (normalizedQuery.includes("quantum")) {
+      if (format === 'video') {
+        result.url = 'https://www.youtube.com/embed/JhHMJCUmq28'; // Quantum video
         result.thumbnailUrl = 'https://img.youtube.com/vi/JhHMJCUmq28/maxresdefault.jpg';
-        break;
-      case 'audio':
-        // In a real implementation, this could be a text-to-speech conversion of web content
-        result.url = 'https://example.com/audio/generated-audio.mp3'; // This would be a real URL in production
-        result.content = `Audio explanation about ${topic} at ${level} level. In a real implementation, this would be actual content converted to speech.`;
-        break;
-      case 'signLanguage':
-        result.url = 'https://example.com/videos/sign-language-explanation.mp4'; // This would be a real URL in production
-        result.thumbnailUrl = 'https://example.com/thumbnails/sign-language.jpg';
-        break;
+      } else if (format === 'text') {
+        result.content = generateTextContent("quantum computing", level);
+      }
+    } else {
+      // For any other topic, generate generic content
+      if (format === 'text') {
+        result.content = generateTextContent(normalizedQuery, level);
+      } else if (format === 'video') {
+        // Use a general educational video for other topics
+        result.url = 'https://www.youtube.com/embed/fKgMxDbV5Do'; // General educational video
+        result.thumbnailUrl = 'https://img.youtube.com/vi/fKgMxDbV5Do/maxresdefault.jpg';
+      }
     }
     
     return result;
@@ -358,28 +365,35 @@ export const searchContent = async (
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Create a more robust keyword matching system
-  const keywords = {
-    'data structure': ['e4', 'e5'],
-    'machine learning': ['e1'],
-    'quantum': ['e2'],
-    'rome': ['e3']
-  };
-  
-  // Normalize query - convert to lowercase, remove excess whitespace
+  // Normalize the query to handle common typos and variations
   const normalizedQuery = query.toLowerCase().trim();
   
-  // Check if the query contains any of our keywords
+  // Create a more comprehensive keyword matching system
+  const keywordMap: Record<string, string[]> = {
+    'data structure': ['e4', 'e5'],
+    'data structur': ['e4', 'e5'],
+    'data structures': ['e4', 'e5'],
+    'machine learning': ['e1'],
+    'ml': ['e1'],
+    'artificial intelligence': ['e1'],
+    'quantum': ['e2'],
+    'quantum computing': ['e2'],
+    'rome': ['e3'],
+    'ancient rome': ['e3'],
+    'history': ['e3']
+  };
+  
+  // Try to find the best match for the query
   let matchedContent = null;
   let bestMatchScore = 0;
   
-  for (const [keyword, ids] of Object.entries(keywords)) {
-    // Check how well the query matches the keyword
-    if (normalizedQuery.includes(keyword.toLowerCase())) {
+  // Check for exact matches first
+  for (const [keyword, ids] of Object.entries(keywordMap)) {
+    if (normalizedQuery.includes(keyword)) {
       const matchScore = keyword.length / normalizedQuery.length; // Simple relevance score
       
       if (matchScore > bestMatchScore) {
-        // Find the first matching content item
+        // Find content items matching the format
         for (const id of ids) {
           const item = mockExternalContent.find(item => item.id === id);
           if (item && (format === 'all' || format === item.format)) {
@@ -397,11 +411,28 @@ export const searchContent = async (
     return matchedContent;
   }
   
+  // Check for partial matches if no exact match was found
+  for (const [keyword, ids] of Object.entries(keywordMap)) {
+    // Split the keyword into words and check if any match
+    const keywordWords = keyword.split(' ');
+    for (const word of keywordWords) {
+      if (word.length > 3 && normalizedQuery.includes(word)) {
+        // Find content items matching the format
+        for (const id of ids) {
+          const item = mockExternalContent.find(item => item.id === id);
+          if (item && (format === 'all' || format === item.format)) {
+            return item;
+          }
+        }
+      }
+    }
+  }
+  
   // If no match found, return null to trigger web search
   return null;
 };
 
-// Update the generateContent function to remove sign language specific code
+// Generate AI content
 export const generateContent = async (
   prompt: string, 
   format: string
@@ -411,11 +442,8 @@ export const generateContent = async (
   // Simulate AI generation delay
   await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // Filter out sign language content
-  const relevantContent = mockAIContent.filter(item => item.format !== 'signLanguage');
-  
   // Return a random mock AI content
-  const content = { ...relevantContent[Math.floor(Math.random() * relevantContent.length)] };
+  const content = { ...mockAIContent[Math.floor(Math.random() * mockAIContent.length)] };
   
   // Customize the content based on the prompt
   content.title = `${prompt} (AI Generated)`;

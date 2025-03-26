@@ -8,10 +8,8 @@ import ContentError from './content/ContentError';
 import ContentEmpty from './content/ContentEmpty';
 import VideoContent from './content/VideoContent';
 import AudioContent from './content/AudioContent';
-import SignLanguageContent from './content/SignLanguageContent';
 import ContentBadges from './content/ContentBadges';
 import TextContent from './content/TextContent';
-import SignLanguageOverlay from './content/SignLanguageOverlay';
 import { AccessibilityOptions } from './content/types';
 
 export type ContentItem = {
@@ -19,7 +17,7 @@ export type ContentItem = {
   title: string;
   description: string;
   source: 'external' | 'ai';
-  format: 'text' | 'video' | 'audio' | 'signLanguage';
+  format: 'text' | 'video' | 'audio';
   url?: string;
   content?: string;
   thumbnailUrl?: string;
@@ -44,7 +42,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
     textToSpeech: true, // Enable by default for blind users
     highContrast: false,
     subtitles: true,
-    signLanguage: false,
     textSize: 'normal' as 'normal' | 'large' | 'x-large', // Add explicit type assertion here
   });
 
@@ -128,20 +125,12 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
           <AudioContent content={content} />
         )}
         
-        {content.format === 'signLanguage' && content.url && (
-          <SignLanguageContent content={content} />
-        )}
-
         <TextContent 
           content={content}
           textSizeClass={textSizeClass}
           highContrast={accessibilityOptions.highContrast}
           onReadContent={readContent}
         />
-
-        {accessibilityOptions.signLanguage && (
-          <SignLanguageOverlay />
-        )}
       </div>
     </div>
   );

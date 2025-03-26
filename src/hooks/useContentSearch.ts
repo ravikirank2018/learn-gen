@@ -41,6 +41,9 @@ const useContentSearch = () => {
     setIsSearching(true);
     setError(null);
     
+    // Debug the search query
+    console.log(`Search initiated for: "${query}" at ${level} level, format: ${format}`);
+    
     // Speak a confirmation message for blind users
     await speakText("Searching for content about " + query);
     
@@ -55,6 +58,7 @@ const useContentSearch = () => {
       }
       
       if (result) {
+        console.log("Search result found:", result);
         setContent(result);
         toast.success('Content found!');
         
@@ -74,10 +78,10 @@ const useContentSearch = () => {
         await speakText(errorMessage);
       }
     } catch (err) {
+      console.error("Search error:", err);
       const errorMessage = 'An error occurred while searching for content.';
       setError(errorMessage);
       toast.error('Error searching for content');
-      console.error(err);
       
       // Synthesize error message for blind users
       await speakText(errorMessage);

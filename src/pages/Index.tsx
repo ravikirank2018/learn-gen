@@ -33,6 +33,8 @@ const Index = () => {
         ? 'intermediate' 
         : 'beginner';
     
+    console.log(`Processing chat: "${message}", Format: ${format}, Level: ${level}`);
+    
     // Call the search function
     handleSearch(message, level, format);
   };
@@ -69,7 +71,7 @@ const Index = () => {
               onSubmit={handleChatSubmit}
               isProcessing={isSearching || isGenerating}
               className="min-h-[400px]"
-              placeholder="Ask for videos with captions or any educational content..."
+              placeholder="Ask for educational content or search for a topic..."
             />
           </div>
         </div>
