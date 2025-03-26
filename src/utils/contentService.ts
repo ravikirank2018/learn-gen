@@ -29,12 +29,12 @@ const mockExternalContent: ContentItem[] = [
   },
   {
     id: 'e4',
-    title: 'Sign Language Basics',
-    description: 'Learn the fundamentals of sign language communication.',
+    title: 'Introduction to Data Structures',
+    description: 'Learn about arrays, linked lists, stacks, queues, trees, and graphs.',
     source: 'external',
-    format: 'signLanguage',
-    url: 'https://example.com/videos/sign-language-basics.mp4',
-    thumbnailUrl: 'https://example.com/thumbnails/sign-language.jpg',
+    format: 'video',
+    url: 'https://www.youtube.com/embed/RBSGKlAvoiM',
+    thumbnailUrl: 'https://img.youtube.com/vi/RBSGKlAvoiM/maxresdefault.jpg',
   },
   {
     id: 'e5',
@@ -211,25 +211,6 @@ export const synthesizeSpeech = async (
   });
 };
 
-// Simulate sign language video generation
-export const generateSignLanguageVideo = async (
-  content: string
-): Promise<{ url: string; thumbnailUrl: string }> => {
-  console.log('Generating sign language video for:', content);
-  
-  // Simulate processing delay
-  await new Promise(resolve => setTimeout(resolve, 3000));
-  
-  // In a real implementation, this would call a service like SignAll API
-  // or similar to generate an actual sign language video
-  
-  // Return mock result
-  return {
-    url: 'https://example.com/ai-videos/generated-sign-language.mp4',
-    thumbnailUrl: 'https://example.com/thumbnails/generated-sign-language.jpg'
-  };
-};
-
 // New function to search web for content
 export const searchWebForContent = async (
   query: string,
@@ -375,38 +356,40 @@ export const searchContent = async (
   console.log(`Searching for: ${query}, Level: ${level}, Format: ${format}`);
   
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Add keyword matching for data structures
+  // Create a more robust keyword matching system
   const keywords = {
-    'data structure': ['e5'],
+    'data structure': ['e4', 'e5'],
     'machine learning': ['e1'],
     'quantum': ['e2'],
-    'rome': ['e3'],
-    'sign language': ['e4']
+    'rome': ['e3']
   };
+  
+  // Normalize query - convert to lowercase, remove excess whitespace
+  const normalizedQuery = query.toLowerCase().trim();
   
   // Check if the query contains any of our keywords
   let matchedContent = null;
+  let bestMatchScore = 0;
   
   for (const [keyword, ids] of Object.entries(keywords)) {
-    if (query.toLowerCase().includes(keyword.toLowerCase())) {
-      // Find the first matching content item
-      for (const id of ids) {
-        const item = mockExternalContent.find(item => item.id === id);
-        if (item && (format === 'all' || format === item.format)) {
-          matchedContent = item;
-          break;
+    // Check how well the query matches the keyword
+    if (normalizedQuery.includes(keyword.toLowerCase())) {
+      const matchScore = keyword.length / normalizedQuery.length; // Simple relevance score
+      
+      if (matchScore > bestMatchScore) {
+        // Find the first matching content item
+        for (const id of ids) {
+          const item = mockExternalContent.find(item => item.id === id);
+          if (item && (format === 'all' || format === item.format)) {
+            matchedContent = item;
+            bestMatchScore = matchScore;
+            break;
+          }
         }
       }
-      if (matchedContent) break;
     }
-  }
-  
-  // If no keyword match found but we're asked for sign language specifically
-  if (!matchedContent && format === 'signLanguage') {
-    const signLanguageContent = mockExternalContent.find(item => item.format === 'signLanguage');
-    if (signLanguageContent) return signLanguageContent;
   }
   
   // If we have a match, return it
@@ -418,7 +401,7 @@ export const searchContent = async (
   return null;
 };
 
-// Simulate AI content generation with a delay
+// Update the generateContent function to remove sign language specific code
 export const generateContent = async (
   prompt: string, 
   format: string
@@ -426,21 +409,13 @@ export const generateContent = async (
   console.log(`Generating content for: ${prompt}, Format: ${format}`);
   
   // Simulate AI generation delay
-  await new Promise(resolve => setTimeout(resolve, 3000));
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
-  // For sign language format, return sign language AI content
-  if (format === 'signLanguage') {
-    const signLanguageContent = mockAIContent.find(item => item.format === 'signLanguage');
-    if (signLanguageContent) {
-      const content = { ...signLanguageContent };
-      content.title = `${prompt} (AI Generated)`;
-      content.description = `AI-generated sign language content about ${prompt}`;
-      return content;
-    }
-  }
+  // Filter out sign language content
+  const relevantContent = mockAIContent.filter(item => item.format !== 'signLanguage');
   
   // Return a random mock AI content
-  const content = { ...mockAIContent[Math.floor(Math.random() * mockAIContent.length)] };
+  const content = { ...relevantContent[Math.floor(Math.random() * relevantContent.length)] };
   
   // Customize the content based on the prompt
   content.title = `${prompt} (AI Generated)`;

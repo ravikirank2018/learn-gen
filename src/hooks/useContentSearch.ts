@@ -5,8 +5,7 @@ import { ContentItem } from '@/components/ContentDisplay';
 import { 
   searchContent, 
   generateContent, 
-  synthesizeSpeech, 
-  generateSignLanguageVideo,
+  synthesizeSpeech,
   searchWebForContent
 } from '@/utils/contentService';
 
@@ -15,7 +14,6 @@ const useContentSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isGeneratingSignLanguage, setIsGeneratingSignLanguage] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
@@ -107,36 +105,6 @@ const useContentSearch = () => {
         // For non-text formats, at least speak the description
         await speakText("Generated content: " + result.description);
       }
-      
-      // If sign language format is requested, generate sign language video
-      if (format === 'signLanguage') {
-        setIsGeneratingSignLanguage(true);
-        await speakText("Generating sign language video...");
-        
-        try {
-          const { url, thumbnailUrl } = await generateSignLanguageVideo(prompt);
-          
-          // Update content with sign language video
-          setContent(prev => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              url,
-              thumbnailUrl,
-              format: 'signLanguage'
-            };
-          });
-          
-          toast.success('Sign language video generated!');
-          await speakText("Sign language video has been successfully generated.");
-        } catch (err) {
-          toast.error('Error generating sign language video');
-          console.error(err);
-          await speakText("There was an error generating the sign language video.");
-        } finally {
-          setIsGeneratingSignLanguage(false);
-        }
-      }
     } catch (err) {
       const errorMessage = 'An error occurred while generating content.';
       setError(errorMessage);
@@ -157,7 +125,6 @@ const useContentSearch = () => {
     isGenerating,
     isListening,
     setIsListening,
-    isGeneratingSignLanguage,
     isSpeaking,
     handleSearch,
     handleGenerate,

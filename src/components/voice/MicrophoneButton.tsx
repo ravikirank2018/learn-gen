@@ -26,6 +26,7 @@ const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
       aria-label={isListening ? 'Stop listening' : 'Start listening'}
       aria-pressed={isListening}
       aria-describedby="voice-status"
+      title={isListening ? 'Stop listening' : 'Start speaking'}
     >
       <svg 
         xmlns="http://www.w3.org/2000/svg" 
@@ -42,6 +43,7 @@ const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({
         <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
         <line x1="12" y1="19" x2="12" y2="22"/>
       </svg>
+      <span className="sr-only">{isListening ? 'Stop listening' : 'Start speech recognition'}</span>
     </button>
   );
 };

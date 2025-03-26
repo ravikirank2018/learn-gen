@@ -1,12 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Layout from '@/components/Layout';
 import Hero from '@/components/Hero';
 import SearchSection from '@/components/SearchSection';
 import ContentDisplay from '@/components/ContentDisplay';
 import AIGenerator from '@/components/AIGenerator';
 import VoiceInteraction from '@/components/VoiceInteraction';
-import SignLanguageSupport from '@/components/SignLanguageSupport';
 import ChatInterface from '@/components/ChatInterface';
 import useContentSearch from '@/hooks/useContentSearch';
 
@@ -18,28 +17,14 @@ const Index = () => {
     isGenerating, 
     isListening,
     setIsListening,
-    isGeneratingSignLanguage,
     isSpeaking,
     handleSearch, 
     handleGenerate,
     speakText
   } = useContentSearch();
 
-  // For deaf users, detect if user may need more visual assistance
-  useEffect(() => {
-    // Check for URL params, browser settings, or stored preferences
-    const urlParams = new URLSearchParams(window.location.search);
-    const accessibilityMode = urlParams.get('accessibility');
-    const needsVisualMode = accessibilityMode === 'deaf' || localStorage.getItem('accessibilityMode') === 'deaf';
-    
-    if (needsVisualMode) {
-      // Set video as preferred format
-      localStorage.setItem('preferredFormat', 'video');
-    }
-  }, []);
-
   const handleChatSubmit = (message: string) => {
-    // Extract format preference, defaulting to video for deaf users
+    // Extract format preference, defaulting to video for better accessibility
     const format = localStorage.getItem('preferredFormat') || 'video';
     // Extract level from message or default to beginner
     const level = message.toLowerCase().includes('advanced') 
@@ -91,21 +76,13 @@ const Index = () => {
       </div>
       
       <div className="container max-w-6xl mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
-            <ContentDisplay 
-              content={content} 
-              isLoading={isSearching || isGenerating} 
-              error={error}
-              speakText={speakText}
-            />
-          </div>
-          <div>
-            <SignLanguageSupport 
-              content={content?.content || null}
-              isGenerating={isGeneratingSignLanguage}
-            />
-          </div>
+        <div className="grid grid-cols-1">
+          <ContentDisplay 
+            content={content} 
+            isLoading={isSearching || isGenerating} 
+            error={error}
+            speakText={speakText}
+          />
         </div>
       </div>
       
