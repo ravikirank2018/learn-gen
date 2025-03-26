@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import AccessibilityControls from './AccessibilityControls';
-import { synthesizeSpeech } from '@/utils/contentService';
+import { synthesizeSpeech } from '@/utils/content';
 import ContentLoading from './content/ContentLoading';
 import ContentError from './content/ContentError';
 import ContentEmpty from './content/ContentEmpty';
@@ -42,6 +42,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({
     textToSpeech: true, // Enable by default for blind users
     highContrast: false,
     subtitles: true,
+    signLanguage: false, // Add this missing property
     textSize: 'normal' as 'normal' | 'large' | 'x-large', // Add explicit type assertion here
   });
 

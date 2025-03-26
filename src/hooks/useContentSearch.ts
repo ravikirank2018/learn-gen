@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { ContentItem } from '@/components/ContentDisplay';
@@ -7,7 +6,7 @@ import {
   generateContent, 
   synthesizeSpeech,
   searchWebForContent
-} from '@/utils/contentService';
+} from '@/utils/content';
 
 const useContentSearch = () => {
   const [content, setContent] = useState<ContentItem | null>(null);
