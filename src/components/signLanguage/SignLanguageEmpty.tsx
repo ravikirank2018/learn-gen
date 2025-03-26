@@ -35,6 +35,16 @@ const SignLanguageEmpty: React.FC<SignLanguageEmptyProps> = ({
       <p className="text-gray-600 dark:text-gray-300 max-w-[300px]" aria-live="polite">
         {accessibilityText}
       </p>
+      <div className="mt-6">
+        <p className="text-sm font-medium text-primary">
+          Try these options:
+        </p>
+        <ul className="text-sm mt-2 space-y-1 text-gray-600 dark:text-gray-300">
+          <li>• Use the chat to ask for videos with captions</li>
+          <li>• Search for educational content with "video" format</li>
+          <li>• Request sign language interpretation for text content</li>
+        </ul>
+      </div>
     </div>
   );
 };

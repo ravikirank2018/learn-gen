@@ -17,7 +17,10 @@ const SignLanguageSupport: React.FC<SignLanguageSupportProps> = ({
   }
 
   if (!content) {
-    return <SignLanguageEmpty className={className} accessibilityText="No sign language content available. You can use voice interaction to search for content." />;
+    return <SignLanguageEmpty 
+      className={className} 
+      accessibilityText="No sign language content available. You can use the chat to request videos with captions or ask for sign language interpretation." 
+    />;
   }
 
   return <SignLanguageContent content={content} className={className} />;
